@@ -1,15 +1,13 @@
 import { ACTION_TYPES, SELECT_ENTITY, SET_INVENTORY_FILTER, SET_PAGINATION } from '../constants';
-import systemProfileStore from '@redhat-cloud-services/frontend-components-inventory-general-info/redux';
+import systemProfileStore from './systemProfileStore';
 import {
     ComplianceTab,
     VulnerabilityTab,
     AdvisorTab,
-    GeneralInformationTab
+    GeneralInformationTab,
+    PatchTab,
+    RosTab
 } from '../components/inventory';
-import PatchMan, {
-    SystemPackageListStore,
-    SystemAdvisoryListStore
-} from '@redhat-cloud-services/frontend-components-inventory-patchman/dist/esm';
 import { applyReducerHash } from '@redhat-cloud-services/frontend-components-utilities/ReducerRegistry';
 import { mergeArraysByKey } from '@redhat-cloud-services/frontend-components-utilities/helpers';
 import { notificationsReducer } from '@redhat-cloud-services/frontend-components-notifications/redux';
@@ -35,6 +33,10 @@ function entitiesLoaded(state, { payload }) {
 }
 
 function entityLoaded(state, { payload: { entitlements } } = { payload: {} }) {
+
+    const hasRosCookie = insights.chrome.visibilityFunctions.isProd() ?
+        insights.chrome.visibilityFunctions.hasCookie('cs_ros_beta_enable', '1') : true;
+
     return {
         ...state,
         loaded: true,
@@ -54,8 +56,14 @@ function entityLoaded(state, { payload: { entitlements } } = { payload: {} }) {
             isEntitled(entitlements && entitlements.insights) && {
                 title: 'Patch',
                 name: 'patch',
-                component: PatchMan
+                component: PatchTab
+            },
+            isEntitled(entitlements && entitlements.insights) && hasRosCookie && {
+                title: 'Resource Optimization',
+                name: 'ros',
+                component: RosTab
             }
+
         ].filter(Boolean)
     };
 }
@@ -127,9 +135,7 @@ function onSetPagination(state, { payload }) {
 let reducers = {
     notifications: notificationsReducer,
     systemProfileStore,
-    permissionsReducer,
-    SystemPackageListStore,
-    SystemAdvisoryListStore
+    permissionsReducer
 };
 
 export const entitiesReducer = ({ LOAD_ENTITIES_FULFILLED }) => applyReducerHash(

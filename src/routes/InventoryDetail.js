@@ -2,7 +2,6 @@ import React, { useContext, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect, useSelector, shallowEqual } from 'react-redux';
 import './inventory.scss';
-import '@redhat-cloud-services/frontend-components-inventory-patchman/dist/esm/index.css';
 import { Link } from 'react-router-dom';
 import { entitesDetailReducer, RegistryContext } from '../store';
 import * as actions from '../actions';
@@ -10,7 +9,6 @@ import { Grid, GridItem } from '@patternfly/react-core';
 import { Breadcrumb, BreadcrumbItem } from '@patternfly/react-core';
 import routerParams from '@redhat-cloud-services/frontend-components-utilities/RouterParams';
 import { Skeleton, SkeletonSize, PageHeader, Main } from '@redhat-cloud-services/frontend-components';
-import '@redhat-cloud-services/frontend-components-inventory-insights/index.css';
 import classnames from 'classnames';
 import { routes } from '../Routes';
 
@@ -28,6 +26,14 @@ const Inventory = ({ entity, currentApp, clearNotifications, loadEntity }) => {
         insights.chrome?.hideGlobalFilter?.(true);
         insights.chrome.appAction('system-detail');
         clearNotifications();
+
+        // BZ: RHEL cockpit is linking to crc/insights/inventory/{}/insights
+        // which results in a page error, catch that and redirect
+        // TODO Remove me when BZ is fixed
+        const splitUrl = window.location.href.split('/insights');
+        if (splitUrl.length === 3) {
+            window.location = `${splitUrl[0]}/insights${splitUrl[1]}`;
+        }
     }, []);
 
     const additionalClasses = {
